@@ -261,7 +261,7 @@ st.markdown(
 )
 
 # Chat history persistence
-CHAT_HISTORY_DIR = Path.home() / ".ollama_chat_history"
+CHAT_HISTORY_DIR = Path.cwd() / ".ollama_chat_history"
 CHAT_HISTORY_DIR.mkdir(exist_ok=True)
 
 
@@ -630,7 +630,10 @@ def main():
     # Add system prompt to messages if provided
     messages_for_api = []
     if system_prompt.strip():
-        enhanced_system_prompt = system_prompt + "\n\nYou are having a conversation with the user. You have access to the full conversation history and should reference previous parts of the conversation when relevant. Always maintain context awareness throughout the conversation."
+        enhanced_system_prompt = (
+            system_prompt
+            + "\n\nYou are having a conversation with the user. You have access to the full conversation history and should reference previous parts of the conversation when relevant. Always maintain context awareness throughout the conversation."
+        )
         messages_for_api.append({"role": "system", "content": enhanced_system_prompt})
 
     # Display chat messages
@@ -683,25 +686,37 @@ def main():
             context_info += f" | History: {len(st.session_state.messages)} msgs"
         if system_prompt.strip():
             context_info += " | System prompt included"
-        
+
         st.info(context_info)
-        
+
         # Debug option to show what's being sent to the model
         with st.expander("🔍 Debug: View context being sent to model", expanded=False):
             st.write("**Messages being sent to Ollama:**")
             for i, msg in enumerate(api_messages):
-                role_emoji = "🤖" if msg["role"] == "system" else "👤" if msg["role"] == "user" else "🤖"
-                st.write(f"{i+1}. {role_emoji} **{msg['role'].title()}:** {msg['content'][:100]}{'...' if len(msg['content']) > 100 else ''}")
+                role_emoji = (
+                    "🤖"
+                    if msg["role"] == "system"
+                    else "👤"
+                    if msg["role"] == "user"
+                    else "🤖"
+                )
+                st.write(
+                    f"{i + 1}. {role_emoji} **{msg['role'].title()}:** {msg['content'][:100]}{'...' if len(msg['content']) > 100 else ''}"
+                )
                 if msg.get("images"):
                     st.write(f"   📸 Images: {len(msg['images'])}")
-            
+
             st.write(f"**Total context size:** {len(api_messages)} messages")
             st.write(f"**Current session:** {st.session_state.current_session}")
-            
+
             # Show conversation summary
             user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
-            assistant_msgs = [m for m in st.session_state.messages if m["role"] == "assistant"]
-            st.write(f"**Conversation stats:** {len(user_msgs)} user messages, {len(assistant_msgs)} assistant responses")
+            assistant_msgs = [
+                m for m in st.session_state.messages if m["role"] == "assistant"
+            ]
+            st.write(
+                f"**Conversation stats:** {len(user_msgs)} user messages, {len(assistant_msgs)} assistant responses"
+            )
 
         # Generate and display assistant response
         with st.chat_message("assistant"):
