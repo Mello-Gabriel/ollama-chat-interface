@@ -1,0 +1,237 @@
+/* Custom CSS for Ollama Chat Interface - Dark Theme Optimized */
+
+/* FORÇA texto branco em TODAS as mensagens de chat */
+div[data-testid="stChatMessageContent"] {
+    color: #ffffff !important;
+}
+
+div[data-testid="stChatMessageContent"] * {
+    color: #ffffff !important;
+}
+
+div[data-testid="stChatMessageContent"] p {
+    color: #ffffff !important;
+}
+
+div[data-testid="stChatMessageContent"] div {
+    color: #ffffff !important;
+}
+
+div[data-testid="stChatMessageContent"] span {
+    color: #ffffff !important;
+}
+
+/* Força cores específicas para elementos markdown */
+.st-emotion-cache-1w7qfeb {
+    color: #ffffff !important;
+}
+
+.st-emotion-cache-1w7qfeb * {
+    color: #ffffff !important;
+}
+
+.st-emotion-cache-1w7qfeb p {
+    color: #ffffff !important;
+    margin-bottom: 1rem !important;
+}
+
+.st-emotion-cache-1w7qfeb strong {
+    color: #ffffff !important;
+    font-weight: bold !important;
+}
+
+.st-emotion-cache-1w7qfeb em {
+    color: #ffffff !important;
+    font-style: italic !important;
+}
+
+.st-emotion-cache-1w7qfeb h1,
+.st-emotion-cache-1w7qfeb h2,
+.st-emotion-cache-1w7qfeb h3,
+.st-emotion-cache-1w7qfeb h4,
+.st-emotion-cache-1w7qfeb h5,
+.st-emotion-cache-1w7qfeb h6 {
+    color: #ffffff !important;
+}
+
+.st-emotion-cache-1w7qfeb ul,
+.st-emotion-cache-1w7qfeb ol {
+    color: #ffffff !important;
+}
+
+.st-emotion-cache-1w7qfeb li {
+    color: #ffffff !important;
+}
+
+/* Containers das mensagens com melhor contraste */
+.st-emotion-cache-1mph9ef {
+    background-color: rgba(30, 35, 45, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    margin: 12px 0 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Mensagens do usuário - azul */
+.st-emotion-cache-1mph9ef:has([data-testid="user-message"]) {
+    background-color: rgba(59, 130, 246, 0.25) !important;
+    border: 1px solid rgba(59, 130, 246, 0.5) !important;
+    border-left: 4px solid rgba(59, 130, 246, 0.8) !important;
+}
+
+/* Mensagens do assistente - verde */
+.st-emotion-cache-1mph9ef:has([data-testid="assistant-message"]) {
+    background-color: rgba(34, 197, 94, 0.25) !important;
+    border: 1px solid rgba(34, 197, 94, 0.5) !important;
+    border-left: 4px solid rgba(34, 197, 94, 0.8) !important;
+}
+
+/* Blocos de código com contraste máximo */
+.st-emotion-cache-1w7qfeb pre {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+    padding: 16px !important;
+    border-radius: 8px !important;
+    overflow-x: auto !important;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-size: 0.9em !important;
+    line-height: 1.4 !important;
+}
+
+.st-emotion-cache-1w7qfeb pre * {
+    color: #ffffff !important;
+}
+
+.st-emotion-cache-1w7qfeb code {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    color: #ffffff !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Qualquer elemento que contenha texto */
+[data-testid="stChatMessageContent"] > div > div {
+    color: #ffffff !important;
+}
+
+/* Aplicar em qualquer elemento com texto */
+.st-emotion-cache-* {
+    color: #ffffff !important;
+}
+
+/* Sidebar melhorada */
+.st-emotion-cache-16txtl3 {
+    background-color: rgba(15, 20, 30, 0.95) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Área de input melhorada */
+.st-emotion-cache-1f3w014 {
+    background-color: rgba(20, 25, 35, 0.95) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Input de chat */
+.stChatInput textarea {
+    background-color: rgba(40, 45, 55, 0.9) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+}
+
+.stChatInput textarea:focus {
+    border-color: rgba(59, 130, 246, 0.6) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Botões aprimorados */
+.stButton > button {
+    background-color: rgba(59, 130, 246, 0.9) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(59, 130, 246, 0.7) !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    padding: 8px 16px !important;
+}
+
+.stButton > button:hover {
+    background-color: rgba(59, 130, 246, 1) !important;
+    border: 1px solid rgba(59, 130, 246, 0.9) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Selectbox melhorado */
+.stSelectbox select {
+    background-color: rgba(40, 45, 55, 0.9) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 6px !important;
+}
+
+/* Notificações e alertas */
+.stInfo {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    border: 1px solid rgba(59, 130, 246, 0.4) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+
+.stSuccess {
+    background-color: rgba(34, 197, 94, 0.15) !important;
+    border: 1px solid rgba(34, 197, 94, 0.4) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+
+.stWarning {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+
+.stError {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    border: 1px solid rgba(239, 68, 68, 0.4) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+
+/* Melhorar upload de arquivos */
+.stFileUploader section {
+    background-color: rgba(40, 45, 55, 0.8) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.4) !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(15, 20, 30, 0.6);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    border: 2px solid rgba(15, 20, 30, 0.6);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+::-webkit-scrollbar-corner {
+    background: rgba(15, 20, 30, 0.6);
+}
