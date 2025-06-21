@@ -72,11 +72,10 @@ def initialize_session_state() -> None:
 def prepare_api_messages(system_prompt: str) -> list[dict]:
     """Prepare messages for the Ollama API."""
     messages_for_api = []
-    
+
     if system_prompt.strip():
         enhanced_system_prompt = (
-            system_prompt
-            + "\n\nYou are having a conversation with the user. "
+            system_prompt + "\n\nYou are having a conversation with the user. "
             "You have access to the full conversation history and should "
             "reference previous parts of the conversation when relevant. "
             "Always maintain context awareness throughout the conversation."

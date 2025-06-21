@@ -65,12 +65,14 @@ def optimize_image_for_vision(image_file: Any) -> str:
                     rgba_img = img.convert("RGBA")
                     rgb_img.paste(
                         rgba_img,
-                        mask=rgba_img.split()[-1] if rgba_img.mode in ("RGBA", "LA") else None
+                        mask=rgba_img.split()[-1]
+                        if rgba_img.mode in ("RGBA", "LA")
+                        else None,
                     )
                 else:
                     rgb_img.paste(
-                        img, 
-                        mask=img.split()[-1] if img.mode in ("RGBA", "LA") else None
+                        img,
+                        mask=img.split()[-1] if img.mode in ("RGBA", "LA") else None,
                     )
                 processed_img = rgb_img
             elif img.mode != "RGB":
@@ -93,8 +95,7 @@ def optimize_image_for_vision(image_file: Any) -> str:
 
                 # Resize image with high quality resampling
                 processed_img = processed_img.resize(
-                    (new_width, new_height), 
-                    Image.Resampling.LANCZOS
+                    (new_width, new_height), Image.Resampling.LANCZOS
                 )
 
                 st.info(
@@ -105,10 +106,7 @@ def optimize_image_for_vision(image_file: Any) -> str:
             # Save optimized image to bytes
             img_byte_array = BytesIO()
             processed_img.save(
-                img_byte_array, 
-                format="JPEG", 
-                quality=IMAGE_QUALITY, 
-                optimize=True
+                img_byte_array, format="JPEG", quality=IMAGE_QUALITY, optimize=True
             )
             img_bytes = img_byte_array.getvalue()
 
@@ -120,8 +118,8 @@ def optimize_image_for_vision(image_file: Any) -> str:
 
             if reduction_percent > 0:
                 st.success(
-                    f"🗜️ Image optimized: {original_size//1024}KB → "
-                    f"{new_size//1024}KB ({reduction_percent:.1f}% smaller)"
+                    f"🗜️ Image optimized: {original_size // 1024}KB → "
+                    f"{new_size // 1024}KB ({reduction_percent:.1f}% smaller)"
                 )
 
             # Encode to base64
@@ -155,16 +153,10 @@ def display_message_with_images(message: dict[str, Any]) -> None:
                 try:
                     img_bytes = base64.b64decode(img_data)
                     st.image(
-                        img_bytes, 
-                        caption=f"Image {i + 1}", 
-                        use_container_width=True
+                        img_bytes, caption=f"Image {i + 1}", use_container_width=True
                     )
                 except Exception as e:
                     st.error(f"Error displaying image {i + 1}: {e}")
             else:
                 # If it's already an image object
-                st.image(
-                    img_data, 
-                    caption=f"Image {i + 1}", 
-                    use_container_width=True
-                )
+                st.image(img_data, caption=f"Image {i + 1}", use_container_width=True)

@@ -9,7 +9,6 @@ import streamlit as st
 
 from src.utils.security import safe_create_directory, validate_session_id
 
-
 # Chat history persistence with security validation
 CHAT_HISTORY_DIR = Path.cwd() / ".ollama_chat_history"
 

@@ -1,7 +1,8 @@
 """Ollama integration utilities."""
 
 import os
-from typing import Any, Generator
+from collections.abc import Generator
+from typing import Any
 
 import ollama
 import streamlit as st
@@ -63,10 +64,10 @@ def get_available_models() -> list[str]:
 
 
 def stream_ollama_response(
-    client: ollama.Client, 
-    model: str, 
-    messages: list[dict[str, Any]], 
-    temperature: float = 0.7
+    client: ollama.Client,
+    model: str,
+    messages: list[dict[str, Any]],
+    temperature: float = 0.7,
 ) -> Generator[str, None, None]:
     """Stream response from Ollama."""
     try:

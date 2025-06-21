@@ -13,7 +13,11 @@ from src.config import (
     OPTIMIZE_IMAGES,
     PREVIEW_LENGTH,
 )
-from src.utils.chat_history import get_chat_sessions, get_context_summary, load_chat_history
+from src.utils.chat_history import (
+    get_chat_sessions,
+    get_context_summary,
+    load_chat_history,
+)
 from src.utils.image_processing import (
     display_message_with_images,
     encode_image_to_base64,
@@ -54,9 +58,9 @@ def render_sidebar() -> tuple[str, float, str, bool]:
         optimize_images = st.checkbox(
             "Auto-optimize images for faster processing",
             value=OPTIMIZE_IMAGES,
-            help="Automatically resize and compress images to improve model performance"
+            help="Automatically resize and compress images to improve model performance",
         )
-        
+
         if optimize_images:
             st.info(
                 f"📏 Max size: {MAX_IMAGE_WIDTH}x{MAX_IMAGE_HEIGHT}px | "
@@ -225,6 +229,7 @@ def render_sidebar() -> tuple[str, float, str, bool]:
                 st.session_state, "current_session"
             ):
                 from src.utils.chat_history import save_chat_history
+
                 save_chat_history(
                     st.session_state.messages, st.session_state.current_session
                 )
@@ -242,6 +247,7 @@ def render_sidebar() -> tuple[str, float, str, bool]:
 
         # GPU status
         import os
+
         if "CUDA_VISIBLE_DEVICES" in os.environ:
             st.success("🚀 GPU Enabled")
         else:
@@ -281,7 +287,7 @@ def render_debug_info(api_messages: list, system_prompt: str) -> None:
             content_preview = msg["content"][:PREVIEW_LENGTH]
             if len(msg["content"]) > PREVIEW_LENGTH:
                 content_preview += "..."
-            
+
             st.write(
                 f"{i + 1}. {role_emoji} **{msg['role'].title()}:** {content_preview}"
             )
