@@ -1,12 +1,132 @@
+"""Ollama Chat Interface - A secure Streamlit application for chatting with local Ollama models.
+
+Security features:
+- Input validation and sanitization
+- File upload restrictions
+- Session ID validation
+- Safe directory operations
+"""
+
 import base64
 import json
 import os
-from datetime import datetime
+import re
+from datetime import UTC, datetime
+from io import BytesIO
 from pathlib import Path
 
 import ollama
 import streamlit as st
 from PIL import Image
+
+# Security constants
+MAX_FILE_SIZE = 200 * 1024 * 1024  # 200MB to match UI display
+MAX_CONTENT_LENGTH = 100
+ALLOWED_IMAGE_TYPES = {"png", "jpg", "jpeg", "gif", "bmp"}
+SESSION_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
+MAX_SESSION_ID_LENGTH = 50
+
+# Image optimization constants
+MAX_IMAGE_WIDTH = 1024  # Reduzir para 1024px de largura máxima
+MAX_IMAGE_HEIGHT = 1024  # Reduzir para 1024px de altura máxima
+IMAGE_QUALITY = 85  # Qualidade de compressão para JPEG (85% é um bom balance)
+OPTIMIZE_IMAGES = True  # Flag para ativar/desativar otimização
+
+
+def validate_session_id(session_id: str) -> bool:
+    """Validate session ID for security."""
+    if not session_id or len(session_id) > MAX_SESSION_ID_LENGTH:
+        return False
+    return bool(SESSION_ID_PATTERN.match(session_id))
+
+
+def sanitize_file_upload(uploaded_file) -> bool:
+    """Validate uploaded file for security with detailed error reporting."""
+    if uploaded_file is None:
+        st.error("❌ No file provided")
+        return False
+
+    # Check file size first (only if size attribute exists)
+    if hasattr(uploaded_file, "size"):
+        if uploaded_file.size == 0:
+            st.error("❌ File is empty")
+            return False
+        if uploaded_file.size > MAX_FILE_SIZE:
+            size_mb = uploaded_file.size / (1024 * 1024)
+            max_size_mb = MAX_FILE_SIZE / (1024 * 1024)
+            st.error(f"❌ File too large: {size_mb:.1f}MB. Maximum: {max_size_mb}MB")
+            return False
+
+    # Check file name exists
+    if not hasattr(uploaded_file, "name") or not uploaded_file.name:
+        st.error("❌ File has no name")
+        return False
+
+    # Check file type by extension
+    file_extension = (
+        uploaded_file.name.split(".")[-1].lower() if "." in uploaded_file.name else ""
+    )
+
+    if not file_extension:
+        st.error("❌ File has no extension")
+        return False
+
+    if file_extension not in ALLOWED_IMAGE_TYPES:
+        st.error(
+            f"❌ Invalid file type '{file_extension}'. Allowed: {', '.join(ALLOWED_IMAGE_TYPES)}"
+        )
+        return False
+
+    # Try to verify it's actually an image by opening it
+    try:
+        # Save current position
+        original_position = (
+            uploaded_file.tell() if hasattr(uploaded_file, "tell") else 0
+        )
+
+        # Reset to beginning for validation
+        if hasattr(uploaded_file, "seek"):
+            uploaded_file.seek(0)
+
+        # Try to open as image
+        with Image.open(uploaded_file) as img:
+            # Basic image validation
+            img.verify()  # This will raise an exception if the image is corrupt
+
+            # Optional: Check image format matches extension
+            img_format = img.format.lower() if img.format else ""
+            if (
+                img_format
+                and img_format != file_extension
+                and not (file_extension == "jpg" and img_format == "jpeg")
+            ):
+                st.warning(
+                    f"⚠️ Image format ({img_format}) doesn't match extension ({file_extension})"
+                )
+
+        # Reset file pointer for later use
+        if hasattr(uploaded_file, "seek"):
+            uploaded_file.seek(original_position)
+
+        return True
+
+    except OSError as e:
+        st.error(f"❌ Cannot read image file: {e}")
+        return False
+    except Exception as e:
+        st.error(f"❌ Invalid image file: {e}")
+        return False
+
+
+def safe_create_directory(path: Path) -> bool:
+    """Safely create directory with proper error handling."""
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+        return True
+    except (OSError, PermissionError) as e:
+        st.error(f"Failed to create directory: {e}")
+        return False
+
 
 # Configure page
 st.set_page_config(
@@ -260,23 +380,29 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Chat history persistence
+# Chat history persistence with security validation
 CHAT_HISTORY_DIR = Path.cwd() / ".ollama_chat_history"
-CHAT_HISTORY_DIR.mkdir(exist_ok=True)
+if not safe_create_directory(CHAT_HISTORY_DIR):
+    st.error("Failed to initialize chat history directory")
+    st.stop()
 
 
-def save_chat_history(messages: list[dict], session_id: str):
-    """Save chat history to file."""
+def save_chat_history(messages: list[dict], session_id: str) -> None:
+    """Save chat history to file with security validation."""
+    if not validate_session_id(session_id):
+        st.error("Invalid session ID")
+        return
+
     history_file = CHAT_HISTORY_DIR / f"chat_{session_id}.json"
     chat_data = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "messages": messages,
         "message_count": len(messages),
     }
     try:
         with open(history_file, "w", encoding="utf-8") as f:
             json.dump(chat_data, f, indent=2, ensure_ascii=False)
-    except OSError as e:
+    except (OSError, PermissionError) as e:
         st.warning(f"Could not save chat history: {e}")
 
 
@@ -408,14 +534,38 @@ def stream_ollama_response(
 
 
 def encode_image_to_base64(image_file) -> str:
-    """Convert uploaded image to base64 string."""
+    """Convert uploaded image to base64 string with improved error handling."""
+    if image_file is None:
+        return ""
+
     try:
+        # Ensure we're at the beginning of the file
+        image_file.seek(0)
+
         # Read the image file and convert to base64
         image_bytes = image_file.read()
+
+        # Verify we actually read some data
+        if not image_bytes:
+            st.error("Error: Empty file or failed to read image data")
+            return ""
+
+        # Encode to base64
         base64_string = base64.b64encode(image_bytes).decode("utf-8")
+
+        # Reset file pointer for potential future use
+        image_file.seek(0)
+
         return base64_string
+
+    except OSError as e:
+        st.error(f"Error reading image file: {e}")
+        return ""
+    except UnicodeDecodeError as e:
+        st.error(f"Error encoding image to base64: {e}")
+        return ""
     except Exception as e:
-        st.error(f"Error encoding image: {e}")
+        st.error(f"Unexpected error processing image: {e}")
         return ""
 
 
@@ -448,6 +598,94 @@ def display_message_with_images(message: dict):
                 st.image(img_data, caption=f"Image {i + 1}", use_container_width=True)
 
 
+def resize_image(image: Image) -> Image:
+    """Redimensionar imagem para largura e altura máximas, mantendo a proporção."""
+    try:
+        # Obter tamanho original
+        original_width, original_height = image.size
+
+        # Calcular a nova largura e altura mantendo a proporção
+        if original_width > original_height:
+            new_width = MAX_IMAGE_WIDTH
+            new_height = int((MAX_IMAGE_WIDTH / original_width) * original_height)
+        else:
+            new_height = MAX_IMAGE_HEIGHT
+            new_width = int((MAX_IMAGE_HEIGHT / original_height) * original_width)
+
+        # Redimensionar a imagem
+        resized_image = image.resize((new_width, new_height), Image.LANCZOS)
+
+        return resized_image
+
+    except Exception as e:
+        st.error(f"Error resizing image: {e}")
+        return image  # Retornar a imagem original em caso de erro
+
+
+def optimize_image_for_vision(image_file) -> str:
+    """Redimensiona e otimiza imagem para melhorar performance dos modelos de visão."""
+    if image_file is None:
+        return ""
+
+    try:
+        # Ensure we're at the beginning of the file
+        image_file.seek(0)
+        
+        # Open image with PIL
+        with Image.open(image_file) as img:
+            # Convert to RGB if necessary (for consistency)
+            if img.mode in ("RGBA", "LA", "P"):
+                # Convert to RGB to avoid issues with transparency
+                rgb_img = Image.new("RGB", img.size, (255, 255, 255))
+                if img.mode == "P":
+                    img = img.convert("RGBA")
+                rgb_img.paste(img, mask=img.split()[-1] if img.mode in ("RGBA", "LA") else None)
+                img = rgb_img
+            elif img.mode != "RGB":
+                img = img.convert("RGB")
+            
+            # Get original dimensions
+            original_width, original_height = img.size
+            
+            # Calculate new dimensions maintaining aspect ratio
+            if original_width > MAX_IMAGE_WIDTH or original_height > MAX_IMAGE_HEIGHT:
+                # Calculate scaling factor
+                width_ratio = MAX_IMAGE_WIDTH / original_width
+                height_ratio = MAX_IMAGE_HEIGHT / original_height
+                scale_factor = min(width_ratio, height_ratio)
+                
+                new_width = int(original_width * scale_factor)
+                new_height = int(original_height * scale_factor)
+                
+                # Resize image with high quality resampling
+                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                
+                st.info(f"📏 Image resized from {original_width}x{original_height} to {new_width}x{new_height} for better performance")
+            
+            # Save optimized image to bytes
+            img_byte_array = BytesIO()
+            img.save(img_byte_array, format="JPEG", quality=IMAGE_QUALITY, optimize=True)
+            img_bytes = img_byte_array.getvalue()
+            
+            # Calculate size reduction
+            image_file.seek(0)
+            original_size = len(image_file.read())
+            new_size = len(img_bytes)
+            reduction_percent = ((original_size - new_size) / original_size) * 100
+            
+            if reduction_percent > 0:
+                st.success(f"🗜️ Image optimized: {original_size//1024}KB → {new_size//1024}KB ({reduction_percent:.1f}% smaller)")
+            
+            # Encode to base64
+            base64_string = base64.b64encode(img_bytes).decode("utf-8")
+            return base64_string
+
+    except Exception as e:
+        st.error(f"Error optimizing image: {e}")
+        # Fallback to original encoding method
+        return encode_image_to_base64(image_file)
+
+
 def main():
     st.title("🤖 Ollama Chat Interface")
     st.markdown("Chat with your local Ollama models")
@@ -467,6 +705,20 @@ def main():
             "Select Model", models, help="Choose an Ollama model to chat with"
         )
 
+        # Image optimization setting
+        st.markdown("---")
+        st.subheader("🖼️ Image Optimization")
+        optimize_images = st.checkbox(
+            "Auto-optimize images for faster processing",
+            value=OPTIMIZE_IMAGES,
+            help="Automatically resize and compress images to improve model performance"
+        )
+        
+        if optimize_images:
+            st.info(f"📏 Max size: {MAX_IMAGE_WIDTH}x{MAX_IMAGE_HEIGHT}px | Quality: {IMAGE_QUALITY}%")
+        else:
+            st.info("🔧 Images will be sent without optimization")
+
         # Vision model indicator
         if selected_model and is_vision_model(selected_model):
             st.success("🔍 Vision model - supports images!")
@@ -483,10 +735,11 @@ def main():
 
         if selected_model and is_vision_model(selected_model):
             uploaded_files = st.file_uploader(
-                "Upload images for analysis",
+                "Upload images for analysis (max 200MB each)",
                 type=["png", "jpg", "jpeg", "gif", "bmp"],
                 accept_multiple_files=True,
-                help="Upload images for the AI to analyze",
+                help="Upload images for the AI to analyze. "
+                "Supported formats: PNG, JPG, JPEG, GIF, BMP",
                 key="sidebar_image_uploader",
             )
 
@@ -494,21 +747,50 @@ def main():
                 # Clear previous images and encode new ones
                 st.session_state.uploaded_images = []
 
-                st.success(f"✅ {len(uploaded_files)} image(s) ready")
-
-                # Display image previews in sidebar
+                # Validate all files before processing
+                valid_files = []
                 for i, uploaded_file in enumerate(uploaded_files):
-                    # Display small preview
-                    image = Image.open(uploaded_file)
-                    st.image(
-                        image, caption=f"Image {i + 1}: {uploaded_file.name}", width=150
-                    )
+                    st.write(f"🔍 Validating file {i + 1}: {uploaded_file.name}")
+                    if sanitize_file_upload(uploaded_file):
+                        valid_files.append(uploaded_file)
+                        st.success(f"✅ File {i + 1} validated successfully")
+                    else:
+                        st.error(
+                            f"❌ File {i + 1} validation failed: {uploaded_file.name}"
+                        )
 
-                    # Reset file pointer and encode
-                    uploaded_file.seek(0)
-                    base64_image = encode_image_to_base64(uploaded_file)
-                    if base64_image:
-                        st.session_state.uploaded_images.append(base64_image)
+                if not valid_files:
+                    st.error(
+                        "❌ No valid files to process. Please check file requirements:"
+                    )
+                    st.info(
+                        "📋 Requirements: PNG, JPG, JPEG, GIF, or BMP format, max 200MB"
+                    )
+                else:
+                    st.success(f"✅ {len(valid_files)} valid image(s) ready for upload")
+
+                    # Display image previews in sidebar
+                    for i, uploaded_file in enumerate(valid_files):
+                        try:
+                            # Display small preview
+                            uploaded_file.seek(0)  # Reset pointer before opening
+                            image = Image.open(uploaded_file)
+                            st.image(
+                                image,
+                                caption=f"Image {i + 1}: {uploaded_file.name}",
+                                width=150,
+                            )
+
+                            # Reset file pointer and optimize/encode
+                            uploaded_file.seek(0)
+                            if optimize_images:
+                                base64_image = optimize_image_for_vision(uploaded_file)
+                            else:
+                                base64_image = encode_image_to_base64(uploaded_file)
+                            if base64_image:
+                                st.session_state.uploaded_images.append(base64_image)
+                        except Exception as e:
+                            st.error(f"❌ Error processing {uploaded_file.name}: {e!s}")
 
                 # Clear images button
                 if st.button("🗑️ Clear Images", key="clear_images"):
@@ -534,7 +816,7 @@ def main():
             max_value=2.0,
             value=0.7,
             step=0.1,
-            help="Controls randomness of responses. Higher = more creative, Lower = more focused",
+            help="Controls randomness of responses",
         )
 
         # System prompt
