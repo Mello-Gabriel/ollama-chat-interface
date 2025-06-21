@@ -1,0 +1,11 @@
+[server]
+maxUploadSize = 200
+enableCORS = false
+enableXsrfProtection = false
+enableWebsocketCompression = false
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "dark"
