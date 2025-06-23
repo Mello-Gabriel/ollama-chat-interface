@@ -72,7 +72,7 @@ echo
 echo "📝 Próximos passos:"
 echo "   1. Revisar as mudanças: git diff"
 echo "   2. Fazer commit: git add . && git commit -m 'docs: update repo URLs after rename'"
-echo "   3. Fazer push: git push origin main"
+echo "   3. Fazer push: git push origin master"
 echo "   4. Renomear pasta local: cd .. && mv $OLD_NAME $NEW_NAME"
 echo
 print_success "🎉 Histórico de commits preservado!"

@@ -43,10 +43,9 @@ git remote -v
 
 # 5. Fazer push para verificar conectividade
 print_status "Testando conectividade com o novo repositório..."
-git push -u origin main 2>/dev/null || git push -u origin master 2>/dev/null || {
+git push -u origin master 2>/dev/null || {
     print_warning "Não foi possível fazer push automático. Execute manualmente:"
-    echo "  git push -u origin main"
-    echo "  (ou 'git push -u origin master' se usar master branch)"
+    echo "  git push -u origin master"
 }
 
 print_success "✅ Repositório renomeado com sucesso!"
