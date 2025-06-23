@@ -17,7 +17,13 @@ A secure, feature-rich Streamlit application for chatting with local Ollama mode
 ```
 ollama-chat/
 ├── main.py                     # Main application entry point
-├── src/                        # Source code modules
+├── setup.sh                   # Complete automated setup script
+├── validate.sh                # Setup validation script
+├── run_app.sh                 # Application startup script
+├── pyproject.toml             # UV project configuration
+├── uv.lock                    # UV dependency lock file
+├── requirements.txt           # Fallback dependencies
+├── src/                       # Source code modules
 │   ├── __init__.py
 │   ├── config.py              # Configuration constants
 │   ├── ui/                    # User interface components
@@ -31,15 +37,46 @@ ollama-chat/
 │       └── security.py       # Security & validation
 ├── assets/                    # Static assets
 │   └── styles.css            # Custom CSS styles
-├── run_app.sh                # Application startup script
-└── requirements.txt          # Python dependencies
+├── docs/                      # Documentation
+│   └── *.md                  # Project documentation
+└── tests/                     # Test files
+    └── test_*.py             # Application tests
 ```
 
 ## 🚀 Quick Start
 
+### Option 1: Automated Setup (Recommended)
+
+**One-command setup from scratch:**
+
+```bash
+# Download and run the setup script
+curl -fsSL https://raw.githubusercontent.com/Mello-Gabriel/ollama-chat-interface/main/setup.sh | bash
+
+# OR download the script first, then run it
+wget https://raw.githubusercontent.com/Mello-Gabriel/ollama-chat-interface/main/setup.sh
+chmod +x setup.sh
+./setup.sh
+```
+
+The setup script will automatically:
+- ✅ Clone this repository
+- ✅ Install UV package manager
+- ✅ Install Python 3.12 (via UV)
+- ✅ Install Ollama
+- ✅ Start Ollama service
+- ✅ Install all Python dependencies
+- ✅ Download a vision model (qwen2.5vl:7b)
+- ✅ Validate the installation
+
+### Option 2: Manual Setup
+
+If you prefer to clone the repository yourself:
+
 ### Prerequisites
 
-1. **Python 3.8+** installed
+1. **UV package manager** installed ([installation guide](https://docs.astral.sh/uv/getting-started/installation/))
+   - UV will automatically install Python 3.12 for the project
 2. **Ollama** installed and running
 3. At least one Ollama model downloaded
 
@@ -48,7 +85,7 @@ ollama-chat/
 1. **Clone or download** this repository
 2. **Install dependencies**:
    ```bash
-   pip install -r requirements.txt
+   uv sync
    ```
 
 3. **Run the application**:
@@ -56,11 +93,34 @@ ollama-chat/
    # Using the startup script (recommended)
    ./run_app.sh
    
-   # Or directly with streamlit
+   # Or directly with uv
+   uv run streamlit run main.py
+   
+   # Or activate the environment first
+   source .venv/bin/activate
    streamlit run main.py
    ```
 
 4. **Open your browser** to `http://localhost:8501`
+
+### Setup Scripts
+
+This project includes helpful setup and validation scripts:
+
+- **`setup.sh`**: Complete automated installation and configuration
+- **`validate.sh`**: Validates that all components are properly installed
+- **`run_app.sh`**: Starts the application with proper environment
+
+```bash
+# Complete setup (recommended for new installations)
+./setup.sh
+
+# Validate existing setup
+./validate.sh
+
+# Start the application
+./run_app.sh
+```
 
 ## 🖼️ Image Processing Features
 
